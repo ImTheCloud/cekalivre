@@ -119,3 +119,13 @@ def test_token_is_required_when_configured(client):
     assert client.post("/optimize", json=body).status_code == 401
     assert client.post("/optimize", json=body, headers={"Authorization": "Bearer nope"}).status_code == 401
     assert client.post("/optimize", json=body, headers={"Authorization": "Bearer secret"}).status_code == 200
+
+
+def test_end_with_known_location_is_not_geocoded(client):
+    body = {
+        "start": START,
+        "end": {"address": "Mon dépôt (choisi dans les suggestions)", "location": {"lat": 50.85, "lng": 4.45}},
+        "stops": [stop(1, "A 1, 1000 Bruxelles")],
+    }
+    data = client.post("/optimize", json=body).json()
+    assert data["end"] == {"lat": 50.85, "lng": 4.45, "label": "Mon dépôt (choisi dans les suggestions)"}

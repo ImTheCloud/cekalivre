@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 
 import type { Stop } from '@/types';
 
@@ -34,4 +34,14 @@ export function multiStopNavigationUrl(stops: Pick<Stop, 'address' | 'location'>
 
 export async function openInGoogleMaps(url: string): Promise<void> {
   await Linking.openURL(url);
+}
+
+/** Ouvre Google Maps et prévient le chauffeur si c'est impossible. */
+export async function navigateTo(url: string | null): Promise<void> {
+  if (!url) return;
+  try {
+    await openInGoogleMaps(url);
+  } catch {
+    Alert.alert('Google Maps', "Impossible d'ouvrir Google Maps sur ce téléphone.");
+  }
 }

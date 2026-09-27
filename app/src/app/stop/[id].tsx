@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Banner } from '@/components/banner';
 import { Button } from '@/components/button';
 import { Radius, Spacing } from '@/constants/theme';
@@ -59,9 +60,7 @@ function StopDetails({ stop, number }: { stop: Stop; number: number | undefined 
   const removeStop = useTourStore((s) => s.removeStop);
   const toggleDelivered = useTourStore((s) => s.toggleDelivered);
 
-  const [address, setAddress] = useState(stop.address);
   const [photoBusy, setPhotoBusy] = useState(false);
-  const addressChanged = address.trim() !== stop.address && address.trim().length > 0;
 
   const handlePhoto = async (source: 'camera' | 'library') => {
     setPhotoBusy(true);
@@ -125,20 +124,16 @@ function StopDetails({ stop, number }: { stop: Stop; number: number | undefined 
 
         <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Adresse</Text>
-          <TextInput
-            value={address}
-            onChangeText={setAddress}
-            multiline
-            autoCorrect={false}
-            style={inputStyle}
+          <AddressAutocomplete
+            key={stop.address}
+            initialValue={stop.address}
+            placeholder="Recherche la bonne adresse…"
+            onSelect={(choice) => updateAddress(stop.id, choice)}
           />
-          {addressChanged && (
-            <Button label="Enregistrer l’adresse" icon="save-outline" onPress={() => updateAddress(stop.id, address.trim())} />
-          )}
-          {!!stop.label && (
+          {(!!stop.label || !!stop.precision) && (
             <Text style={[styles.meta, { color: theme.textSecondary }]}>
-              Reconnue comme : {stop.label}
-              {stop.precision && !stop.warning ? `\n${PRECISION_LABEL[stop.precision]}` : ''}
+              {stop.label && stop.label !== stop.address ? `Reconnue comme : ${stop.label}\n` : ''}
+              {stop.precision && !stop.warning ? PRECISION_LABEL[stop.precision] : ''}
             </Text>
           )}
         </View>

@@ -26,7 +26,15 @@ export type Stop = {
 export type EndPoint =
   | { mode: 'default' }
   | { mode: 'none' }
-  | { mode: 'custom'; address: string };
+  | { mode: 'custom'; address: string; location?: LatLng | null };
+
+/** Adresse choisie par le chauffeur : suggestion (avec position) ou texte libre (position = null). */
+export type AddressChoice = {
+  address: string;
+  location: LatLng | null;
+  label: string | null;
+  precision: GeocodePrecision | null;
+};
 
 export type RouteSummary = {
   optimizedAt: number;

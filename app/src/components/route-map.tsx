@@ -17,11 +17,16 @@ type Props = {
   selectedId: string | null;
   route: RouteSummary | null;
   onSelect: (id: string | null) => void;
+  /** Centre de la carte quand aucun arrêt n'est positionné (position du chauffeur). */
+  fallbackCenter?: LatLng | null;
+  /** Marges (px) laissées libres par les éléments posés sur la carte (recherche, panneau). */
+  edgePadding?: { top: number; right: number; bottom: number; left: number };
 };
 
 // Belgique entière, avant que les arrêts soient positionnés.
 const INITIAL_REGION = { latitude: 50.6, longitude: 4.6, latitudeDelta: 2.8, longitudeDelta: 2.8 };
-const EDGE_PADDING = { top: 80, right: 60, bottom: 260, left: 60 };
+const DEFAULT_EDGE_PADDING = { top: 80, right: 60, bottom: 260, left: 60 };
+const USER_ZOOM = { latitudeDelta: 0.04, longitudeDelta: 0.04 };
 
 // Google Maps partout sur Android. Sur iOS, Expo Go n'embarque qu'Apple Maps :
 // Google Maps y est activé seulement dans une build native avec clé (voir app.config.ts).
@@ -63,7 +68,7 @@ function NumberedMarkerComponent({ stop, number, isNext, selected, onPress }: Ma
 const NumberedMarker = memo(NumberedMarkerComponent);
 
 export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
-  { stops, numbers, nextStopId, selectedId, route, onSelect },
+  { stops, numbers, nextStopId, selectedId, route, onSelect, fallbackCenter, edgePadding = DEFAULT_EDGE_PADDING },
   ref,
 ) {
   const theme = useTheme();
@@ -83,8 +88,11 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
 
   const fitAll = () => {
     const points = [...located.map((s) => s.location), ...(route?.end ? [route.end] : [])];
-    if (points.length === 0) return;
-    mapRef.current?.fitToCoordinates(points.map(toCoord), { edgePadding: EDGE_PADDING, animated: true });
+    if (points.length === 0) {
+      if (fallbackCenter) mapRef.current?.animateToRegion({ ...toCoord(fallbackCenter), ...USER_ZOOM }, 400);
+      return;
+    }
+    mapRef.current?.fitToCoordinates(points.map(toCoord), { edgePadding, animated: true });
   };
 
   useImperativeHandle(ref, () => ({ fitAll }));
@@ -94,7 +102,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
     const timer = setTimeout(fitAll, 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [located.length, route?.optimizedAt]);
+  }, [located.length, route?.optimizedAt, fallbackCenter?.lat, fallbackCenter?.lng]);
 
   return (
     <MapView

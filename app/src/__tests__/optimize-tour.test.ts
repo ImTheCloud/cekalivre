@@ -36,7 +36,7 @@ beforeEach(() => {
     matrixSource: 'osrm' as const,
   }));
   useTourStore.setState({ stops: [], route: null, dirty: false, endPoint: { mode: 'default' } });
-  useSettingsStore.setState({ defaultEndAddress: '' });
+  useSettingsStore.setState({ defaultEndAddress: '', defaultEndLocation: null });
 });
 
 it("envoie uniquement les arrêts non livrés, depuis la position GPS", async () => {
@@ -54,10 +54,10 @@ it("envoie uniquement les arrêts non livrés, depuis la position GPS", async ()
 });
 
 it.each([
-  ['default', 'Dépôt 1, 1070 Anderlecht', { mode: 'default' as const }, { address: 'Dépôt 1, 1070 Anderlecht' }],
+  ['default', 'Dépôt 1, 1070 Anderlecht', { mode: 'default' as const }, { address: 'Dépôt 1, 1070 Anderlecht', location: null }],
   ['default sans adresse réglée', '', { mode: 'default' as const }, null],
   ['none', 'Dépôt 1, 1070 Anderlecht', { mode: 'none' as const }, null],
-  ['custom', 'Dépôt 1', { mode: 'custom' as const, address: ' Maison 3, 1180 Uccle ' }, { address: 'Maison 3, 1180 Uccle' }],
+  ['custom', 'Dépôt 1', { mode: 'custom' as const, address: ' Maison 3, 1180 Uccle ' }, { address: 'Maison 3, 1180 Uccle', location: null }],
 ])("point d'arrivée : %s", async (_label, defaultEnd, endPoint, expected) => {
   useSettingsStore.setState({ defaultEndAddress: defaultEnd });
   useTourStore.getState().addAddresses(['A']);
@@ -73,4 +73,16 @@ it('refuse d’optimiser une tournée entièrement livrée', async () => {
   useTourStore.getState().toggleDelivered(useTourStore.getState().stops[0].id);
   await expect(optimizeTour()).rejects.toThrow('Aucun arrêt à optimiser');
   expect(mockedOptimize).not.toHaveBeenCalled();
+});
+
+it("envoie la position de l'arrivée par défaut quand elle est connue", async () => {
+  useSettingsStore.getState().setDefaultEnd({
+    address: 'Dépôt 1, 1070 Anderlecht',
+    location: { lat: 50.83, lng: 4.3 },
+    label: 'Dépôt 1, 1070 Anderlecht',
+    precision: 'exact',
+  });
+  useTourStore.getState().addAddresses(['A']);
+  await optimizeTour();
+  expect(mockedOptimize.mock.calls[0][0].end).toEqual({ address: 'Dépôt 1, 1070 Anderlecht', location: { lat: 50.83, lng: 4.3 } });
 });

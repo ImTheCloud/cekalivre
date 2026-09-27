@@ -42,6 +42,26 @@ async function ensureLocationServicesEnabled(): Promise<void> {
   throw new Error('La localisation du téléphone est désactivée. Active-la pour utiliser ta position comme départ.');
 }
 
+/**
+ * Position approximative, sans bloquer ni afficher d'erreur : sert à centrer la carte
+ * et à proposer d'abord les adresses proches. Renvoie null si indisponible.
+ */
+export async function getApproxPosition(): Promise<LatLng | null> {
+  try {
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (permission.status !== 'granted') return null;
+    const last = await Location.getLastKnownPositionAsync();
+    if (last) return toLatLng(last);
+    const current = await withTimeout(
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
+      GPS_TIMEOUT_MS,
+    );
+    return toLatLng(current);
+  } catch {
+    return null;
+  }
+}
+
 /** Position GPS actuelle du téléphone = point de départ de la tournée. */
 export async function getCurrentPosition(): Promise<LatLng> {
   const permission = await Location.requestForegroundPermissionsAsync();

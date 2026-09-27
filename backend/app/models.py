@@ -17,6 +17,8 @@ class LatLng(ApiModel):
 
 class AddressPoint(ApiModel):
     address: str = Field(min_length=3, max_length=300)
+    # Position déjà connue (adresse choisie dans les suggestions) : pas de géocodage.
+    location: LatLng | None = None
 
 
 class StopIn(ApiModel):
@@ -70,3 +72,17 @@ class HealthResponse(ApiModel):
     status: Literal["ok"]
     matrix_source: Literal["osrm", "haversine"]
     geocoders: list[str]
+
+
+class Suggestion(ApiModel):
+    # Adresse complète à enregistrer ("Rue Neuve 11, 1000 Bruxelles").
+    address: str
+    # Affichage sur deux lignes dans la liste de suggestions.
+    title: str
+    subtitle: str
+    location: LatLng
+    precision: Precision
+
+
+class AutocompleteResponse(ApiModel):
+    suggestions: list[Suggestion]

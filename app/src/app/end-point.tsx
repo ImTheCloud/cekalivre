@@ -1,14 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/button';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/store/settings-store';
 import { useTourStore } from '@/store/tour-store';
-import type { EndPoint } from '@/types';
+import type { AddressChoice, EndPoint } from '@/types';
 
 export default function EndPointScreen() {
   const theme = useTheme();
@@ -17,15 +18,27 @@ export default function EndPointScreen() {
   const defaultEndAddress = useSettingsStore((s) => s.defaultEndAddress);
 
   const [mode, setMode] = useState<EndPoint['mode']>(endPoint.mode);
-  const [customAddress, setCustomAddress] = useState(endPoint.mode === 'custom' ? endPoint.address : '');
+  const [custom, setCustom] = useState<AddressChoice | null>(
+    endPoint.mode === 'custom'
+      ? { address: endPoint.address, location: endPoint.location ?? null, label: null, precision: null }
+      : null,
+  );
 
-  const canSave = mode !== 'custom' || customAddress.trim().length > 0;
+  const canSave = mode !== 'custom' || !!custom;
 
   const save = () => {
-    const next: EndPoint = mode === 'custom' ? { mode, address: customAddress.trim() } : { mode };
+    if (mode === 'custom' && !custom) return;
+    const next: EndPoint =
+      mode === 'custom' && custom
+        ? { mode: 'custom', address: custom.address, location: custom.location }
+        : { mode: mode === 'none' ? 'none' : 'default' };
     const unchanged =
       next.mode === endPoint.mode &&
-      (next.mode !== 'custom' || (endPoint.mode === 'custom' && endPoint.address === next.address));
+      (next.mode !== 'custom' ||
+        (endPoint.mode === 'custom' &&
+          endPoint.address === next.address &&
+          endPoint.location?.lat === next.location?.lat &&
+          endPoint.location?.lng === next.location?.lng));
     if (!unchanged) setEndPoint(next);
     router.back();
   };
@@ -70,14 +83,12 @@ export default function EndPointScreen() {
         })}
 
         {mode === 'custom' && (
-          <TextInput
-            value={customAddress}
-            onChangeText={setCustomAddress}
-            autoFocus
-            autoCorrect={false}
-            placeholder="Adresse d’arrivée pour cette tournée"
-            placeholderTextColor={theme.muted}
-            style={[styles.input, { color: theme.text, backgroundColor: theme.card, borderColor: theme.border }]}
+          <AddressAutocomplete
+            autoFocus={!custom}
+            initialValue={custom?.address}
+            placeholder="Recherche l’adresse d’arrivée…"
+            onSelect={setCustom}
+            style={[styles.autocomplete, { backgroundColor: theme.card, borderColor: theme.border }]}
           />
         )}
 
@@ -110,10 +121,9 @@ const styles = StyleSheet.create({
   optionSubtitle: {
     fontSize: 13,
   },
-  input: {
+  autocomplete: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    padding: Spacing.md,
-    fontSize: 16,
+    padding: Spacing.xs,
   },
 });

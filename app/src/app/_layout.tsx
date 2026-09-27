@@ -23,7 +23,7 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerBackTitle: 'Retour' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="add" options={{ title: 'Ajouter des adresses', presentation: 'modal' }} />
+        <Stack.Screen name="add" options={{ title: 'Ajouter des arrêts', presentation: 'modal' }} />
         <Stack.Screen name="end-point" options={{ title: "Point d'arrivée", presentation: 'modal' }} />
         <Stack.Screen name="stop/[id]" options={{ title: 'Arrêt' }} />
       </Stack>

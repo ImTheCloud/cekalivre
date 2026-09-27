@@ -1,4 +1,4 @@
-"""API Cékalivre : un seul endpoint métier, POST /optimize."""
+"""API Cékalivre : POST /optimize (ordre de passage) et GET /autocomplete (suggestions d'adresses)."""
 
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 
+from app.autocomplete import AutocompleteUnavailable, suggest_addresses
 from app.config import Settings, get_settings
 from app.geocoding import GeocodingService, build_geocoding_service
-from app.models import HealthResponse, OptimizeRequest, OptimizeResponse
+from app.models import AutocompleteResponse, HealthResponse, LatLng, OptimizeRequest, OptimizeResponse
 from app.optimize import OptimizeError, optimize
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -71,3 +72,19 @@ async def optimize_route(
         return await optimize(body, settings, geocoder, client)
     except OptimizeError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/autocomplete", response_model=AutocompleteResponse, dependencies=[Depends(require_token)])
+async def autocomplete(
+    settings: SettingsDep,
+    client: Annotated[httpx.AsyncClient, Depends(get_http)],
+    q: Annotated[str, Query(max_length=200)],
+    lat: Annotated[float | None, Query(ge=-90, le=90)] = None,
+    lng: Annotated[float | None, Query(ge=-180, le=180)] = None,
+) -> AutocompleteResponse:
+    bias = LatLng(lat=lat, lng=lng) if lat is not None and lng is not None else None
+    try:
+        suggestions = await suggest_addresses(q, bias, settings, client)
+    except AutocompleteUnavailable as exc:
+        raise HTTPException(status_code=503, detail="Suggestions d'adresses indisponibles pour le moment.") from exc
+    return AutocompleteResponse(suggestions=suggestions)

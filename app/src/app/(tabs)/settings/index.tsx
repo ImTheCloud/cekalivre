@@ -1,7 +1,9 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import Constants from 'expo-constants';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/button';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -9,18 +11,26 @@ import { checkHealth } from '@/lib/api';
 import { getApiToken, getApiUrl } from '@/lib/config';
 import { useSettingsStore } from '@/store/settings-store';
 import { useTourStore } from '@/store/tour-store';
+import type { AddressChoice } from '@/types';
 
 type Health = { state: 'idle' | 'loading' } | { state: 'ok' | 'error'; message: string };
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const defaultEndAddress = useSettingsStore((s) => s.defaultEndAddress);
-  const setDefaultEndAddress = useSettingsStore((s) => s.setDefaultEndAddress);
-  const [draft, setDraft] = useState(defaultEndAddress);
+  const defaultEndLocation = useSettingsStore((s) => s.defaultEndLocation);
+  const setDefaultEnd = useSettingsStore((s) => s.setDefaultEnd);
   const [health, setHealth] = useState<Health>({ state: 'idle' });
+  // Change la clé du champ pour le vider après "Supprimer".
+  const [fieldKey, setFieldKey] = useState(0);
 
   const apiUrl = getApiUrl();
-  const changed = draft.trim() !== defaultEndAddress;
+
+  const saveDefaultEnd = (choice: AddressChoice | null) => {
+    setDefaultEnd(choice);
+    // L'arrivée change : l'ordre calculé n'est plus forcément le bon.
+    if (useTourStore.getState().endPoint.mode === 'default') useTourStore.getState().markDirty();
+  };
 
   const testConnection = async () => {
     setHealth({ state: 'loading' });
@@ -34,38 +44,45 @@ export default function SettingsScreen() {
     }
   };
 
-  const inputStyle = [styles.input, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }];
-
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         style={{ backgroundColor: theme.background }}
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled">
         <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.title, { color: theme.text }]}>Point d’arrivée par défaut</Text>
           <Text style={[styles.help, { color: theme.textSecondary }]}>
-            Utilisé pour chaque tournée (dépôt, domicile…). Tu peux le changer pour une tournée précise depuis
-            l’écran Tournée. Laisse vide pour terminer au dernier arrêt.
+            Utilisé pour chaque tournée (dépôt, domicile…). Tu peux le changer pour une tournée précise depuis la
+            carte ou l’onglet Arrêts. Sans arrivée, la tournée se termine au dernier arrêt.
           </Text>
-          <TextInput
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="Ex. Rue du Dépôt 1, 1070 Anderlecht"
-            placeholderTextColor={theme.muted}
-            style={inputStyle}
-            autoCorrect={false}
-            returnKeyType="done"
+          <AddressAutocomplete
+            key={fieldKey}
+            placeholder="Recherche l’adresse du dépôt…"
+            initialValue={defaultEndAddress}
+            onSelect={saveDefaultEnd}
           />
-          <Button
-            label={changed ? 'Enregistrer' : 'Enregistré'}
-            icon="save-outline"
-            disabled={!changed}
-            onPress={() => {
-              setDefaultEndAddress(draft);
-              if (useTourStore.getState().endPoint.mode === 'default') useTourStore.getState().markDirty();
-            }}
-          />
+          {!!defaultEndAddress && (
+            <View style={styles.savedRow}>
+              <Ionicons
+                name={defaultEndLocation ? 'checkmark-circle' : 'time-outline'}
+                size={16}
+                color={defaultEndLocation ? theme.success : theme.textSecondary}
+              />
+              <Text style={[styles.help, styles.flex, { color: theme.textSecondary }]}>
+                {defaultEndLocation ? 'Enregistrée et localisée.' : 'Enregistrée (sera localisée à l’optimisation).'}
+              </Text>
+              <Button
+                label="Supprimer"
+                variant="ghost"
+                onPress={() => {
+                  saveDefaultEnd(null);
+                  setFieldKey((k) => k + 1);
+                }}
+              />
+            </View>
+          )}
         </View>
 
         <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -88,7 +105,7 @@ export default function SettingsScreen() {
           <Text style={[styles.title, { color: theme.text }]}>À propos</Text>
           <Row label="Version" value={Constants.expoConfig?.version ?? '—'} />
           <Text style={[styles.help, { color: theme.textSecondary }]}>
-            Géocodage et itinéraires : données © les contributeurs d’OpenStreetMap (ODbL). Navigation : Google Maps.
+            Adresses et itinéraires : données © les contributeurs d’OpenStreetMap (ODbL). Navigation : Google Maps.
           </Text>
         </View>
       </ScrollView>
@@ -115,6 +132,7 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,
+    paddingBottom: 120,
   },
   section: {
     padding: Spacing.lg,
@@ -129,12 +147,10 @@ const styles = StyleSheet.create({
   help: {
     fontSize: 14,
   },
-  input: {
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    fontSize: 16,
+  savedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   row: {
     flexDirection: 'row',

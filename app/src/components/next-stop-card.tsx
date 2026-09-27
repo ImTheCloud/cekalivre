@@ -14,13 +14,15 @@ type Props = {
   onNavigate: () => void;
   onDelivered: () => void;
   onOpen: () => void;
+  /** Sans cadre ni fond : pour l'intégrer dans le panneau de la carte. */
+  embedded?: boolean;
 };
 
-export function NextStopCard({ stop, number, onNavigate, onDelivered, onOpen }: Props) {
+export function NextStopCard({ stop, number, onNavigate, onDelivered, onOpen, embedded }: Props) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.warning }]}>
+    <View style={embedded ? styles.embedded : [styles.card, { backgroundColor: theme.card, borderColor: theme.warning }]}>
       <Text style={[styles.kicker, { color: theme.warning }]}>PROCHAIN ARRÊT</Text>
 
       <Pressable onPress={onOpen} style={styles.header}>
@@ -71,6 +73,9 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: Radius.lg,
     borderWidth: 2,
+    gap: Spacing.md,
+  },
+  embedded: {
     gap: Spacing.md,
   },
   kicker: {

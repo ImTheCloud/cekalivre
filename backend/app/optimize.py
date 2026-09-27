@@ -80,6 +80,8 @@ async def _resolve_end(end: LatLng | AddressPoint | None, start: LatLng, geocode
         return None
     if isinstance(end, LatLng):
         return EndOut(lat=end.lat, lng=end.lng, label="Arrivée")
+    if end.location is not None:
+        return EndOut(lat=end.location.lat, lng=end.location.lng, label=end.address)
     try:
         result = await geocoder.geocode(end.address, bias=start)
     except GeocodingUnavailable as exc:

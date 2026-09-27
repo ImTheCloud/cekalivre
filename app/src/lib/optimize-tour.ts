@@ -2,14 +2,20 @@ import { optimizeRoute, type OptimizeRequest } from '@/lib/api';
 import { getCurrentPosition } from '@/lib/location';
 import { useSettingsStore } from '@/store/settings-store';
 import { useTourStore } from '@/store/tour-store';
-import type { EndPoint } from '@/types';
+import type { EndPoint, LatLng } from '@/types';
 
 export type OptimizeOutcome = { optimizedCount: number; unresolvedCount: number };
 
-function resolveEnd(endPoint: EndPoint, defaultEndAddress: string): OptimizeRequest['end'] {
+function resolveEnd(
+  endPoint: EndPoint,
+  defaultEnd: { address: string; location: LatLng | null },
+): OptimizeRequest['end'] {
   if (endPoint.mode === 'none') return null;
-  if (endPoint.mode === 'custom') return endPoint.address.trim() ? { address: endPoint.address.trim() } : null;
-  return defaultEndAddress ? { address: defaultEndAddress } : null;
+  if (endPoint.mode === 'custom') {
+    const address = endPoint.address.trim();
+    return address ? { address, location: endPoint.location ?? null } : null;
+  }
+  return defaultEnd.address ? { address: defaultEnd.address, location: defaultEnd.location } : null;
 }
 
 /**
@@ -24,7 +30,8 @@ export async function optimizeTour(): Promise<OptimizeOutcome> {
   }
 
   const start = await getCurrentPosition();
-  const end = resolveEnd(endPoint, useSettingsStore.getState().defaultEndAddress);
+  const { defaultEndAddress, defaultEndLocation } = useSettingsStore.getState();
+  const end = resolveEnd(endPoint, { address: defaultEndAddress, location: defaultEndLocation });
 
   const result = await optimizeRoute({
     start,

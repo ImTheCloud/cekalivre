@@ -5,7 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { OptimizeResponse } from '@/lib/api';
 import { createId } from '@/lib/id';
 import { deleteAllPhotos, deletePhoto } from '@/lib/photos';
-import type { EndPoint, RouteSummary, Stop } from '@/types';
+import type { AddressChoice, EndPoint, RouteSummary, Stop } from '@/types';
 
 type TourState = {
   /** Les arrêts, dans l'ordre de passage (après optimisation) ou de saisie (avant). */
@@ -16,8 +16,11 @@ type TourState = {
   dirty: boolean;
   endPoint: EndPoint;
 
+  /** Ajoute des arrêts choisis dans les suggestions (déjà positionnés) ou saisis librement. */
+  addStops: (choices: AddressChoice[]) => void;
+  /** Ajoute des adresses en texte libre (collage d'une liste) : elles seront géocodées à l'optimisation. */
   addAddresses: (addresses: string[]) => void;
-  updateAddress: (id: string, address: string) => void;
+  updateAddress: (id: string, choice: AddressChoice) => void;
   updateNote: (id: string, note: string) => void;
   setPhoto: (id: string, photo: string | null) => void;
   duplicateStop: (id: string) => void;
@@ -30,15 +33,19 @@ type TourState = {
   resetTour: () => void;
 };
 
-function newStop(address: string): Stop {
+export function freeTextChoice(address: string): AddressChoice {
+  return { address, location: null, label: null, precision: null };
+}
+
+function newStop(choice: AddressChoice): Stop {
   return {
     id: createId(),
-    address,
+    address: choice.address,
     note: '',
     photo: null,
-    location: null,
-    label: null,
-    precision: null,
+    location: choice.location,
+    label: choice.label,
+    precision: choice.precision,
     warning: null,
     notFound: false,
     deliveredAt: null,
@@ -57,23 +64,28 @@ export const useTourStore = create<TourState>()(
       dirty: false,
       endPoint: { mode: 'default' },
 
-      addAddresses: (addresses) =>
+      addStops: (choices) =>
         set((state) => ({
-          stops: [...state.stops, ...addresses.map(newStop)],
+          stops: [...state.stops, ...choices.map(newStop)],
           dirty: state.route !== null || state.dirty,
         })),
 
-      updateAddress: (id, address) =>
+      addAddresses: (addresses) => get().addStops(addresses.map(freeTextChoice)),
+
+      updateAddress: (id, choice) =>
         set((state) => {
           const current = state.stops.find((s) => s.id === id);
-          if (!current || current.address === address) return state;
+          if (!current) return state;
+          const sameLocation =
+            current.location?.lat === choice.location?.lat && current.location?.lng === choice.location?.lng;
+          if (current.address === choice.address && sameLocation) return state;
           return {
-            // Nouvelle adresse = il faudra la géocoder à nouveau.
+            // Sans position (texte libre), l'adresse sera géocodée à la prochaine optimisation.
             stops: updateStop(state.stops, id, {
-              address,
-              location: null,
-              label: null,
-              precision: null,
+              address: choice.address,
+              location: choice.location,
+              label: choice.label,
+              precision: choice.precision,
               warning: null,
               notFound: false,
             }),
