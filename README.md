@@ -31,6 +31,8 @@ Cahier des charges : [SPEC.md](SPEC.md)
 
 Prérequis : Node.js 20+, [uv](https://docs.astral.sh/uv/) pour Python, et l'app **Expo Go** sur ton téléphone. Le téléphone et le Mac doivent être sur le même Wi-Fi.
 
+Installer uv (une seule fois, sans Homebrew) : `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
 **1. Backend** (terminal 1)
 
 ```bash
@@ -65,8 +67,6 @@ Dans l'app, onglet **Réglages** → « Tester la connexion ».
 cd backend && uv run pytest          # 51 tests : solveur, géocodage, matrice OSRM, API
 cd app && npm test && npx tsc --noEmit && npx expo lint   # 21 tests : store, optimisation, liens Google Maps
 ```
-
-La CI GitHub ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lance les deux à chaque push.
 
 ## Mise en production (gratuite)
 

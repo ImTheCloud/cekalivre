@@ -15,8 +15,8 @@ Tant que le Mac est allumé et sur le même Wi-Fi que le téléphone, le démarr
 Pour tester en tournée (4G) sans serveur, tu peux exposer temporairement le backend du Mac avec un tunnel gratuit :
 
 ```bash
-brew install cloudflared
-cloudflared tunnel --url http://localhost:8000     # affiche une URL https://xxxx.trycloudflare.com
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz | tar xz
+./cloudflared tunnel --url http://localhost:8000     # affiche une URL https://xxxx.trycloudflare.com
 ```
 
 Mets ensuite cette URL dans `app/.env.local` (`EXPO_PUBLIC_API_URL=https://xxxx.trycloudflare.com`) et relance `npx expo start`.
