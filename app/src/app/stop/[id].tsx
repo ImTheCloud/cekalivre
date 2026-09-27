@@ -121,9 +121,7 @@ function StopDetails({ stop, number }: { stop: Stop; number: number | undefined 
             text="Adresse introuvable. Corrige-la (rue, numéro, code postal, commune) puis ré-optimise."
           />
         )}
-        {stop.suspicious && !stop.notFound && (
-          <Banner tone="warning" icon="location" text="Adresse très loin du point de départ : vérifie-la." />
-        )}
+        {!!stop.warning && !stop.notFound && <Banner tone="warning" icon="location" text={stop.warning} />}
 
         <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Adresse</Text>

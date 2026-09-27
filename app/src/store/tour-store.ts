@@ -39,7 +39,7 @@ function newStop(address: string): Stop {
     location: null,
     label: null,
     precision: null,
-    suspicious: false,
+    warning: null,
     notFound: false,
     deliveredAt: null,
   };
@@ -74,7 +74,7 @@ export const useTourStore = create<TourState>()(
               location: null,
               label: null,
               precision: null,
-              suspicious: false,
+              warning: null,
               notFound: false,
             }),
             dirty: true,
@@ -141,7 +141,7 @@ export const useTourStore = create<TourState>()(
                 location: r.location,
                 label: r.label ?? stop.label,
                 precision: r.precision ?? stop.precision,
-                suspicious: r.suspicious,
+                warning: r.warning,
                 notFound: false,
               }),
             ];
@@ -151,7 +151,7 @@ export const useTourStore = create<TourState>()(
           const unresolvedIds = new Set(result.unresolved.map((u) => u.id));
           const unresolved = state.stops
             .filter((s) => !placed.has(s.id) && unresolvedIds.has(s.id))
-            .map((s) => take({ ...s, location: null, label: null, precision: null, notFound: true }));
+            .map((s) => take({ ...s, location: null, label: null, precision: null, warning: null, notFound: true }));
 
           // Sécurité : un arrêt ajouté pendant le calcul ne doit jamais disparaître.
           const rest = state.stops.filter((s) => !placed.has(s.id));

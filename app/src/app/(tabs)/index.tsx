@@ -57,7 +57,7 @@ export default function TourScreen() {
   const delivered = stops.filter((s) => s.deliveredAt);
   const remainingLocated = stops.filter((s) => !s.deliveredAt && s.location);
   const unresolvedCount = stops.filter((s) => s.notFound).length;
-  const suspiciousCount = stops.filter((s) => !s.deliveredAt && s.suspicious).length;
+  const warningCount = stops.filter((s) => !s.deliveredAt && s.warning).length;
   const finished = route !== null && stops.length > 0 && delivered.length === stops.length;
   const visibleStops = filter === 'todo' ? stops.filter((s) => !s.deliveredAt) : stops;
 
@@ -143,11 +143,11 @@ export default function TourScreen() {
           text={`${unresolvedCount} adresse(s) introuvable(s). Touche-les pour les corriger.`}
         />
       )}
-      {suspiciousCount > 0 && (
+      {warningCount > 0 && (
         <Banner
           tone="warning"
           icon="location"
-          text={`${suspiciousCount} adresse(s) très loin du départ : vérifie-les sur la carte.`}
+          text={`${warningCount} adresse(s) à vérifier (en orange) : la position trouvée est peut-être fausse.`}
         />
       )}
 

@@ -21,8 +21,8 @@ function StopRowComponent({ stop, number, isNext, onPress, onToggleDelivered, on
   const delivered = !!stop.deliveredAt;
   const warning = stop.notFound
     ? 'Adresse introuvable — touche pour la corriger'
-    : stop.suspicious
-      ? 'Loin du départ — vérifie l’adresse'
+    : stop.warning
+      ? stop.warning
       : stop.precision && stop.precision !== 'exact'
         ? 'Position approximative'
         : null;

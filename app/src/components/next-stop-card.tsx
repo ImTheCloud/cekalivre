@@ -34,6 +34,11 @@ export function NextStopCard({ stop, number, onNavigate, onDelivered, onOpen }: 
               {stop.label}
             </Text>
           )}
+          {!!stop.warning && (
+            <Text style={[styles.label, { color: theme.warning }]} numberOfLines={2}>
+              {stop.warning}
+            </Text>
+          )}
         </View>
         {!!stop.photo && (
           <Image source={{ uri: photoUri(stop.photo) }} style={styles.photo} contentFit="cover" />

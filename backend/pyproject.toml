@@ -1,0 +1,31 @@
+[project]
+name = "cekalivre-backend"
+version = "0.1.0"
+description = "API d'optimisation de tournée de livraison (géocodage + OSRM + OR-Tools)"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "ortools>=9.12",
+    "pydantic-settings>=2.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "anyio>=4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+# Avertissements internes aux dépendances (OR-Tools/SWIG, Starlette), sans impact.
+filterwarnings = [
+    "ignore::DeprecationWarning:importlib._bootstrap",
+    "ignore:Using `httpx` with `starlette.testclient`",
+]
+
+[tool.uv]
+package = false

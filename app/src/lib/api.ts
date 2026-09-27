@@ -13,7 +13,7 @@ export type OptimizedStop = {
   location: LatLng;
   label: string | null;
   precision: GeocodePrecision | null;
-  suspicious: boolean;
+  warning: string | null;
   legDurationS: number;
   legDistanceM: number;
 };

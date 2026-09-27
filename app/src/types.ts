@@ -15,8 +15,8 @@ export type Stop = {
   /** Adresse reconnue par le géocodeur, pour que le chauffeur puisse vérifier. */
   label: string | null;
   precision: GeocodePrecision | null;
-  /** Adresse éloignée du point de départ : probablement mal reconnue. */
-  suspicious: boolean;
+  /** Doute sur le géocodage (rue ou code postal différent, très loin du départ…), à montrer au chauffeur. */
+  warning: string | null;
   /** Le géocodeur n'a rien trouvé pour cette adresse. */
   notFound: boolean;
   deliveredAt: number | null;

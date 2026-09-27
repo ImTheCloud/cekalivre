@@ -1,56 +1,44 @@
-# Welcome to your Expo app 👋
+# Cékalivre — application mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application Expo (SDK 57, React Native, TypeScript). Vue d'ensemble et démarrage : [README racine](../README.md).
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Lancer
 
 ```bash
-npm run reset-project
+npm install
+npx expo start        # puis scanner le QR code avec Expo Go
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Configuration
 
-### Other setup steps
+Copie `.env.example` en `.env.local` si besoin. En développement, rien n'est obligatoire.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Variable | Rôle |
+| --- | --- |
+| `EXPO_PUBLIC_API_URL` | URL du backend. Vide en dev : `http://<IP du Mac>:8000` est utilisé automatiquement |
+| `EXPO_PUBLIC_API_TOKEN` | Jeton partagé avec le backend (`API_TOKEN`) |
+| `GOOGLE_MAPS_ANDROID_API_KEY` / `GOOGLE_MAPS_IOS_API_KEY` | Uniquement pour les builds natives (EAS). Inutiles dans Expo Go |
 
-## Learn more
+## Écrans (`src/app/`)
 
-To learn more about developing your project with Expo, look at the following resources:
+| Fichier | Écran |
+| --- | --- |
+| `(tabs)/index.tsx` | **Tournée** : compteur de progression, prochain arrêt, liste, Ajouter / Optimiser |
+| `(tabs)/map.tsx` | **Carte** : repères numérotés dans l'ordre de passage |
+| `(tabs)/settings.tsx` | **Réglages** : arrivée par défaut, test du serveur |
+| `add.tsx` | Coller ou saisir des adresses (une par ligne) |
+| `stop/[id].tsx` | Détail d'un arrêt : adresse, note, photo, naviguer, livré, dupliquer, supprimer |
+| `end-point.tsx` | Point d'arrivée de la tournée du jour |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Où est la logique ?
 
-## Join the community
+- `src/store/tour-store.ts` : tout l'état de la tournée (arrêts, ordre, livrés). Il est sauvegardé automatiquement sur le téléphone, donc rien n'est perdu quand on bascule vers Google Maps.
+- `src/lib/optimize-tour.ts` : position GPS → appel `POST /optimize` → nouvel ordre. Les arrêts déjà livrés sont exclus, ce qui permet de ré-optimiser en cours de tournée.
+- `src/lib/google-maps.ts` : liens de navigation Google Maps (1 arrêt, ou jusqu'à 10 d'affilée).
+- `src/lib/photos.ts` : photos de colis, enregistrées dans le dossier privé de l'app.
 
-Join our community of developers creating universal apps.
+## Limites connues (v0)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **iOS dans Expo Go** : la carte utilise Apple Maps, car Expo Go n'embarque pas Google Maps sur iOS. Une build native avec `GOOGLE_MAPS_IOS_API_KEY` passe à Google Maps.
+- **Navigation multi-arrêts** : Google Maps accepte au plus 9 étapes par lien. L'app en propose donc 10 d'affilée.
+- **Données locales** : les données restent sur le téléphone. Désinstaller l'app efface la tournée en cours et ses photos.
