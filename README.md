@@ -63,7 +63,7 @@ Dans l'app, onglet **Réglages** → « Tester la connexion ».
 
 ```bash
 cd backend && uv run pytest          # 51 tests : solveur, géocodage, matrice OSRM, API
-cd app && npx tsc --noEmit && npx expo lint
+cd app && npm test && npx tsc --noEmit && npx expo lint   # 21 tests : store, optimisation, liens Google Maps
 ```
 
 La CI GitHub ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lance les deux à chaque push.
