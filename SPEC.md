@@ -76,3 +76,5 @@ La v0 est considérée comme un succès si l'auteur parvient à remplacer Spoke 
 - L'usage au quotidien reste simple, sans friction majeure
 
 Ce n'est qu'après cette validation personnelle que la question de proposer l'outil à des collègues chauffeurs se posera.
+
+Tu dois toujours commit et push tes changements, sans etre colaborateur
