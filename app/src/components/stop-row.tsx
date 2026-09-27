@@ -65,7 +65,7 @@ function StopRowComponent({ stop, number, isNext, onPress, onToggleDelivered, on
         </View>
       </View>
 
-      {!!stop.location && !delivered && (
+      {!delivered && (
         <Pressable
           accessibilityLabel="Naviguer vers cet arrêt"
           hitSlop={8}

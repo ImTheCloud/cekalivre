@@ -138,7 +138,7 @@ function StopDetails({ stop, number }: { stop: Stop; number: number | undefined 
           {!!stop.label && (
             <Text style={[styles.meta, { color: theme.textSecondary }]}>
               Reconnue comme : {stop.label}
-              {stop.precision ? `\n${PRECISION_LABEL[stop.precision]}` : ''}
+              {stop.precision && !stop.warning ? `\n${PRECISION_LABEL[stop.precision]}` : ''}
             </Text>
           )}
         </View>
@@ -187,7 +187,7 @@ function StopDetails({ stop, number }: { stop: Stop; number: number | undefined 
         </View>
 
         <View style={styles.actions}>
-          {stop.location && !stop.deliveredAt && (
+          {!stop.deliveredAt && (
             <Button label="Naviguer avec Google Maps" icon="navigate" size="lg" onPress={handleNavigate} />
           )}
           {!stop.notFound && (
